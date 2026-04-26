@@ -278,11 +278,11 @@ export default function HomeScreen() {
 
   const current = messages[step];
 
-  // Images for gallery
+  // Images for gallery (using remote URLs to avoid build-time asset compilation errors)
   const galleryImages = [
-    require('../../assets/images/love_v2_1.png'),
-    require('../../assets/images/love_v2_2.png'),
-    require('../../assets/images/love_v2_3.png'),
+    { uri: 'https://images.unsplash.com/photo-1518199266791-73994940132d?q=80&w=1000&auto=format&fit=crop' },
+    { uri: 'https://images.unsplash.com/photo-1516589174184-c685266d430c?q=80&w=1000&auto=format&fit=crop' },
+    { uri: 'https://images.unsplash.com/photo-1494972308805-463bc619d34e?q=80&w=1000&auto=format&fit=crop' },
   ];
 
   return (
