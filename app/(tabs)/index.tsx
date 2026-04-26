@@ -280,9 +280,9 @@ export default function HomeScreen() {
 
   // Images for gallery
   const galleryImages = [
-    require('../../assets/images/love1.png'),
-    require('../../assets/images/love2.png'),
-    require('../../assets/images/love3.png'),
+    require('../../assets/images/love_v2_1.png'),
+    require('../../assets/images/love_v2_2.png'),
+    require('../../assets/images/love_v2_3.png'),
   ];
 
   return (
