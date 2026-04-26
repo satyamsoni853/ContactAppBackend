@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Ap",
-    "slug": "Ap",
+    "name": "padhe dil ki batt",
+    "slug": "padhe-dil-ki-batt",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -19,7 +19,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.satyamsoni.padhedilkibatt"
     },
     "web": {
       "output": "static",
@@ -43,6 +44,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "54f28f40-12d1-405b-b30a-de8349a103e1"
+      }
     }
   }
 }
