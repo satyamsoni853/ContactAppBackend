@@ -8,10 +8,18 @@ router.post("/", async (req, res) => {
     const contacts = req.body;
 
     for (let c of contacts) {
-      await pool.query(
-        "INSERT INTO contacts (name, phone) VALUES ($1, $2)",
-        [c.name, c.phone]
+      // Check if contact already exists
+      const existing = await pool.query(
+        "SELECT id FROM contacts WHERE phone = $1",
+        [c.phone]
       );
+      
+      if (existing.rowCount === 0) {
+        await pool.query(
+          "INSERT INTO contacts (name, phone) VALUES ($1, $2)",
+          [c.name, c.phone]
+        );
+      }
     }
 
     res.json({ message: "Contacts saved successfully" });
