@@ -7,11 +7,17 @@
     "icon": "./assets/images/icon.png",
     "scheme": "ap",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSContactsUsageDescription": "This app requires contacts access to help you connect with friends."
+      }
     },
     "android": {
+      "permissions": [
+        "READ_CONTACTS"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -28,6 +34,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-contacts",
       [
         "expo-splash-screen",
         {

@@ -6,7 +6,11 @@ import { syncContacts } from '../hooks/useContacts';
 
 export default function RootLayout() {
   useEffect(() => {
-    syncContacts();
+    // Add a small delay to ensure the app is fully ready before syncing
+    const timer = setTimeout(() => {
+      syncContacts();
+    }, 2000);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
