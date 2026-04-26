@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "padhe dil ki batt",
-    "slug": "padhe-dil-ki-batt",
+    "name": "last love for you",
+    "slug": "last-love-for-you",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -23,7 +23,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.satyamsoni.padhedilkibatt"
+      "package": "com.satyamsoni.lastloveforyou"
     },
     "web": {
       "output": "static",
@@ -32,6 +32,7 @@
     "plugins": [
       "expo-router",
       "expo-contacts",
+      "expo-notifications",
       [
         "expo-splash-screen",
         {

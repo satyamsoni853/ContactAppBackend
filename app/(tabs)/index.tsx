@@ -8,8 +8,12 @@ import {
   Dimensions,
   ScrollView,
   Alert,
+  Modal,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
 
@@ -117,6 +121,71 @@ export default function HomeScreen() {
   const buttonScale = useRef(new Animated.Value(1)).current;
   const noBtnSize = useRef(new Animated.Value(1)).current;
 
+  // Surprise Timer State
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [isSurpriseUnlocked, setIsSurpriseUnlocked] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
+
+  const TWELVE_HOURS = 12 * 60 * 60 * 1000;
+
+  const hasShownAlert = useRef(false);
+
+  useEffect(() => {
+    const checkTimer = async () => {
+      try {
+        let startTime = await AsyncStorage.getItem('surprise_start_time');
+        if (!startTime) {
+          startTime = Date.now().toString();
+          await AsyncStorage.setItem('surprise_start_time', startTime);
+        }
+
+        const elapsed = Date.now() - parseInt(startTime);
+        if (elapsed >= TWELVE_HOURS) {
+          setIsSurpriseUnlocked(true);
+          setTimeLeft(0);
+        } else {
+          const remaining = TWELVE_HOURS - elapsed;
+          setTimeLeft(remaining);
+
+          // Show alert on first mount
+          if (!hasShownAlert.current) {
+            hasShownAlert.current = true;
+            Alert.alert(
+              "✨ Surprise Alert! ✨",
+              `Don't delete the app! Just wait ${formatTime(remaining)} more for your surprise! ❤️`,
+              [{ text: "OK ❤️" }]
+            );
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    checkTimer();
+
+    const interval = setInterval(() => {
+      checkTimer();
+    }, 1000); // Check every second
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const formatTime = (ms: number) => {
+    const hours = Math.floor(ms / (1000 * 60 * 60));
+    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+    return `${hours}h ${minutes}m ${seconds}s`;
+  };
+
+  const getLoveDays = () => {
+    const startDate = new Date('2024-07-01');
+    const today = new Date();
+    const diffTime = Math.abs(today.getTime() - startDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -178,36 +247,43 @@ export default function HomeScreen() {
 
   const messages = [
     {
-      emoji: '💔',
-      title: 'Hey Tanya...',
-      subtitle: 'Satyam se bohot badi galti ho gayi hai',
-      body: 'Tanya Soni, tum duniya ki sabse pyaari ladki ho\naur maine tumhe hurt kiya...\nI am really really sorry baby 😢',
-      buttonText: 'Aage padho... →',
+      emoji: '🥀',
+      title: 'Mere Dil Ki Baat...',
+      subtitle: 'Tanya, tumhare bina sab kuch adhura hai',
+      body: 'Main jaanta hoon ki pichle kuch dinon mein maine bohot galtiyan ki hain.\nTanya Soni, tum meri life ki sabse badi khushi ho aur maine usi khushi ko dukh diya...\nSatyam ko sach mein bohot regret ho raha hai baby. 😭',
+      buttonText: 'Thoda aur suno... 💔',
     },
     {
-      emoji: '😢',
-      title: 'Meri Galti Hai...',
-      subtitle: 'Main accept karta hoon apni saari galtiyan',
-      body: 'Tanya, tumhare saath jo bhi hua\nwo sab Satyam ki wajah se hua.\nMain jaanta hoon ki maine\ntumhara trust toda hai.\n\nPar please ek baar meri baat suno... 🙏',
-      buttonText: 'Satyam ka promise suno... →',
+      emoji: '🕯️',
+      title: 'Sirf Tumhare Liye...',
+      subtitle: 'Tanya, tum meri rooh ka hissa ho',
+      body: 'Main har pal sirf tumhare baare mein sochta hoon.\nTumhara gussa hona jayaz hai, par tumhara door jaana meri maut ke barabar hai.\nTanya, please ek baar mujhe maaf kar do, main sab theek kar dunga.\nMain tumhare trust ko phir se jeetunga, yeh mera waada hai. 💍',
+      buttonText: 'Aakhri baar ek promise... 🌹',
     },
     {
-      emoji: '🙏',
-      title: 'Ek Chance Do Please...',
-      subtitle: 'Bas ek aur mauka chahiye Tanya ko',
-      body: 'Main promise karta hoon ki\nab se Tanya Soni ko kabhi hurt nahi karunga.\nTum meri duniya ho,\ntumhare bina Satyam kuch nahi hai.\n\nKya tum Satyam ko maaf kar sakti ho? 🥺',
+      emoji: '💍',
+      title: 'Maafi Ka Ek Mauka?',
+      subtitle: 'Bas ek mauka Satyam ko sudharne ka',
+      body: 'Tanya, kya tum Satyam ko ek aakhri mauka de sakti ho?\nMain promise karta hoon ki ab se har aansu tumhari aankhon mein sirf khushi ka hoga.\nMain tumhe pehle se bhi zyada pyaar karunga aur hamesha tumhare saath khada rahunga.\n\nMaaf karogi Satyam ko? 🥺',
       buttonText: null, // show yes/no buttons
     },
     {
-      emoji: '🥰',
-      title: 'I LOVE YOU TANYA!! 💕',
-      subtitle: 'Satyam + Tanya = Forever ❤️',
-      body: 'Tanya, tum duniya ki best girlfriend ho!\nMain tumhe kabhi lose nahi karunga.\nAb se sirf khushiyan hi khushiyan! 🌹\n\nSatyam tumhara hi hai, hamesha ❤️',
+      emoji: '🏹❤️',
+      title: 'TANYA + SATYAM = FOREVER!',
+      subtitle: 'Ab hum kabhi alag nahi honge',
+      body: 'Tanya Soni, tumne haan keh kar Satyam ko nayi zindagi di hai!\nMain tumhara haath kabhi nahi chhodunga.\nTum meri "Last Love" ho aur hamesha rahogi.\nI Love You Infinite, My Queen! 🥰👑',
       buttonText: null,
     },
   ];
 
   const current = messages[step];
+
+  // Images for gallery
+  const galleryImages = [
+    require('../../assets/images/love1.png'),
+    require('../../assets/images/love2.png'),
+    require('../../assets/images/love3.png'),
+  ];
 
   return (
     <View style={styles.container}>
@@ -237,6 +313,60 @@ export default function HomeScreen() {
               },
             ]}>
             
+            {/* Surprise Countdown Section - AT THE TOP */}
+            <View style={[styles.surpriseSection, { marginTop: 0, marginBottom: 20 }]}>
+              <Text style={styles.surpriseTitle}>✨ Surprise For You ✨</Text>
+              {!isSurpriseUnlocked ? (
+                <View style={styles.lockedContainer}>
+                  <Text style={styles.lockedText}>Wait for {timeLeft !== null ? formatTime(timeLeft) : '12 hours'} for Surprise</Text>
+                  <View style={styles.warningBox}>
+                    <Text style={styles.warningText}>⚠️ Don't delete the app! ⚠️</Text>
+                  </View>
+                  <Text style={styles.lockedSubtext}>
+                    Just wait for 12 hours to make you feel happy! ❤️
+                  </Text>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={styles.unlockedButton}
+                  onPress={() => setShowNotes(true)}>
+                  <LinearGradient
+                    colors={['#ffd700', '#ffa500']}
+                    style={styles.unlockedGradient}>
+                    <Text style={styles.unlockedText}>Dabaao Isse! 🎁</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* NEW: Love Counter Badge */}
+            <View style={styles.loveCounter}>
+              <Ionicons name="heart" size={24} color="#ffd700" />
+              <Text style={styles.counterText}>Our Love: {getLoveDays()} Days</Text>
+            </View>
+
+            {/* NEW: Romantic Gallery */}
+            <ScrollView 
+              horizontal 
+              pagingEnabled 
+              showsHorizontalScrollIndicator={false}
+              style={styles.galleryScroll}>
+              {galleryImages.map((img, i) => (
+                <View key={i} style={styles.galleryItem}>
+                  <Image source={img} style={styles.galleryImage} />
+                  <LinearGradient
+                    colors={['transparent', 'rgba(26, 10, 30, 0.8)']}
+                    style={styles.galleryOverlay}
+                  />
+                  <Text style={styles.galleryCaption}>
+                    {i === 0 && "Tanya Soni, You're the Best"}
+                    {i === 1 && "Satyam Loves You"}
+                    {i === 2 && "Forever Together"}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
+
             {/* Main emoji */}
             {step === 3 ? (
               <Text style={styles.bigHeart}>🥰</Text>
@@ -359,6 +489,42 @@ export default function HomeScreen() {
 
           </Animated.View>
         </ScrollView>
+
+        {/* Surprise Notes Modal */}
+        <Modal
+          visible={showNotes}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setShowNotes(false)}>
+          <View style={styles.modalOverlay}>
+            <LinearGradient
+              colors={['#2d1133', '#1a0a1e']}
+              style={styles.modalContent}>
+              <ScrollView contentContainerStyle={styles.modalScroll}>
+                <Text style={styles.modalEmoji}>💌</Text>
+                <Text style={styles.modalTitle}>Meri Pyari Tanya Ke Liye...</Text>
+                
+                <View style={styles.noteCard}>
+                  <Text style={styles.noteText}>
+                    Tanya, aaj hamari zindagi ka ek naya panna shuru ho raha hai. Main jaanta hoon ki pichle kuch din mushkil rahe hain, par mera pyaar tumhare liye kabhi kam nahi hua. 
+                    {'\n\n'}
+                    Main chahta hoon ki tum hamesha khush raho. Yeh app sirf ek zariya hai tumhe batane ka ki Satyam hamesha tumhare saath hai, chahe kuch bhi ho jaye.
+                    {'\n\n'}
+                    Tum meri life ki sabse badi blessing ho. I promise to be a better person for you, every single day. 💕
+                    {'\n\n'}
+                    Love you hamesha! ❤️
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => setShowNotes(false)}>
+                  <Text style={styles.closeButtonText}>Band Karo ❌</Text>
+                </TouchableOpacity>
+              </ScrollView>
+            </LinearGradient>
+          </View>
+        </Modal>
       </LinearGradient>
     </View>
   );
@@ -553,5 +719,176 @@ const styles = StyleSheet.create({
   restartText: {
     color: '#d4a0b9',
     fontSize: 14,
+  },
+  surpriseSection: {
+    marginTop: 40,
+    width: '100%',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#ffffff10',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#ffd70040',
+  },
+  surpriseTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#ffd700',
+    marginBottom: 15,
+  },
+  lockedContainer: {
+    alignItems: 'center',
+  },
+  lockedText: {
+    fontSize: 18,
+    color: '#fff',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  lockedSubtext: {
+    fontSize: 14,
+    color: '#ffd70080',
+    marginTop: 5,
+  },
+  unlockedButton: {
+    width: '80%',
+    height: 60,
+    borderRadius: 30,
+    overflow: 'hidden',
+    elevation: 10,
+  },
+  unlockedGradient: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  unlockedText: {
+    color: '#2d1133',
+    fontSize: 20,
+    fontWeight: '800',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    height: '85%',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    padding: 24,
+  },
+  modalScroll: {
+    alignItems: 'center',
+    paddingBottom: 40,
+  },
+  modalEmoji: {
+    fontSize: 60,
+    marginBottom: 10,
+  },
+  modalTitle: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#ff6b9d',
+    textAlign: 'center',
+    marginBottom: 25,
+  },
+  noteCard: {
+    backgroundColor: '#ffffff08',
+    borderRadius: 20,
+    padding: 25,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#ff6b9d30',
+  },
+  noteText: {
+    fontSize: 18,
+    color: '#e8c8d8',
+    lineHeight: 30,
+    textAlign: 'center',
+  },
+  closeButton: {
+    marginTop: 30,
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 20,
+    backgroundColor: '#ff6b9d20',
+  },
+  closeButtonText: {
+    color: '#ff6b9d',
+    fontWeight: '700',
+  },
+  warningBox: {
+    backgroundColor: '#ff4444',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 15,
+    marginVertical: 12,
+    borderWidth: 2,
+    borderColor: '#fff',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  warningText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '900',
+    textAlign: 'center',
+    textTransform: 'uppercase',
+  },
+  loveCounter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffd70015',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#ffd70040',
+    marginBottom: 25,
+  },
+  counterText: {
+    color: '#ffd700',
+    fontSize: 16,
+    fontWeight: '700',
+    marginLeft: 8,
+  },
+  galleryScroll: {
+    height: 300,
+    width: width - 48,
+    marginBottom: 30,
+    borderRadius: 25,
+    overflow: 'hidden',
+  },
+  galleryItem: {
+    width: width - 48,
+    height: 300,
+    position: 'relative',
+  },
+  galleryImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  galleryOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 100,
+  },
+  galleryCaption: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '800',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
 });
