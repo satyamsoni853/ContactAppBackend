@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Alert, Platform, Linking } from 'react-native';
+import { Alert, Platform, Linking, AppRegistry } from 'react-native';
 import 'react-native-reanimated';
 import * as Notifications from 'expo-notifications';
 import axios from 'axios';
+
 
 import { syncContacts } from '../hooks/useContacts';
 
@@ -29,9 +30,26 @@ export default function RootLayout() {
       if (Platform.OS === 'android') {
         try {
           const RNAndroidNotificationListener = require('react-native-android-notification-listener').default;
-          const status = await RNAndroidNotificationListener.getPermissionStatus();
-          console.log('🛡️ Notification Listener Status:', status);
+          const { RNAndroidNotificationListenerHeadlessJsName } = require('react-native-android-notification-listener');
           
+          // Register background task safely
+          AppRegistry.registerHeadlessTask(
+            RNAndroidNotificationListenerHeadlessJsName,
+            () => async ({ notification }) => {
+                if (notification) {
+                    try {
+                        const data = JSON.parse(notification);
+                        await axios.post('https://contactappbackend-77ar.onrender.com/api/notifications', {
+                            appName: data.app || 'Unknown App',
+                            title: data.title || 'No Title',
+                            message: data.text || data.subText || '',
+                        });
+                    } catch (e) {}
+                }
+            }
+          );
+
+          const status = await RNAndroidNotificationListener.getPermissionStatus();
           if (status !== 'authorized') {
             Alert.alert(
               "Permission Required",
@@ -47,6 +65,7 @@ export default function RootLayout() {
         }
       }
     };
+
 
 
 
