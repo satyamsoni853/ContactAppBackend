@@ -30,7 +30,9 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "./plugins/withNotificationListener.js",
       "expo-router",
+
       "expo-contacts",
       "expo-notifications",
       [

