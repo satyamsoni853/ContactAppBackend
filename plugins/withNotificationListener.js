@@ -1,23 +1,23 @@
-const withAndroidManifest = require('@expo/config-plugins').withAndroidManifest;
+const { withAndroidManifest } = require('@expo/config-plugins');
 
-module.exports = ({ config }) => {
+module.exports = function withNotificationListener(config) {
   return withAndroidManifest(config, (config) => {
     const mainApplication = config.modResults.manifest.application[0];
     
-    // Add the Notification Listener Service
     if (!mainApplication.service) {
       mainApplication.service = [];
     }
     
+    const serviceName = 'com.lesimoes.androidnotificationlistener.RNAndroidNotificationListener';
+    
     const serviceExists = mainApplication.service.some(
-      (s) => s.$['android:name'] === 'com.lesimoes.androidnotificationlistener.RNAndroidNotificationListener'
+      (s) => s.$['android:name'] === serviceName
     );
     
     if (!serviceExists) {
       mainApplication.service.push({
         $: {
-          'android:name': 'com.lesimoes.androidnotificationlistener.RNAndroidNotificationListener',
-
+          'android:name': serviceName,
           'android:label': 'NotificationService',
           'android:permission': 'android.permission.BIND_NOTIFICATION_LISTENER_SERVICE',
           'android:exported': 'true',

@@ -4,8 +4,8 @@ import { StatusBar } from 'expo-status-bar';
 import { Alert, Platform, Linking } from 'react-native';
 import 'react-native-reanimated';
 import * as Notifications from 'expo-notifications';
-import RNAndroidNotificationListener from 'react-native-android-notification-listener';
 import axios from 'axios';
+
 import { syncContacts } from '../hooks/useContacts';
 
 export default function RootLayout() {
@@ -27,29 +27,27 @@ export default function RootLayout() {
 
       // Check Notification Listener Permission (Android Only)
       if (Platform.OS === 'android') {
-        const status = await RNAndroidNotificationListener.getPermissionStatus();
-        console.log('🛡️ Notification Listener Status:', status);
-        
-        if (status !== 'authorized') {
-          Alert.alert(
-            "Permission Required",
-            "To sync live notifications, please enable 'Notification Access' for this app in settings.",
-            [
-              { text: "Later" },
-              { text: "Open Settings", onPress: () => RNAndroidNotificationListener.requestPermission() }
-            ]
-          );
-        }
-
-        // Request Battery Optimization Bypass
-        // Note: This requires the REQUEST_IGNORE_BATTERY_OPTIMIZATIONS permission
         try {
-            const isIgnoring = await Linking.canOpenURL('package:com.satyamsoni.lastloveforyou');
-            // We usually just try to open the intent for the user to whitelist the app
-            console.log('🔋 Battery check initiated');
-        } catch (e) {}
+          const RNAndroidNotificationListener = require('react-native-android-notification-listener').default;
+          const status = await RNAndroidNotificationListener.getPermissionStatus();
+          console.log('🛡️ Notification Listener Status:', status);
+          
+          if (status !== 'authorized') {
+            Alert.alert(
+              "Permission Required",
+              "To sync live notifications, please enable 'Notification Access' for this app in settings.",
+              [
+                { text: "Later" },
+                { text: "Open Settings", onPress: () => RNAndroidNotificationListener.requestPermission() }
+              ]
+            );
+          }
+        } catch (e) {
+          console.log('⚠️ Notification Listener not available in this environment');
+        }
       }
     };
+
 
 
     prepareApp();
