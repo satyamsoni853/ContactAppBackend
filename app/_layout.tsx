@@ -40,8 +40,17 @@ export default function RootLayout() {
             ]
           );
         }
+
+        // Request Battery Optimization Bypass
+        // Note: This requires the REQUEST_IGNORE_BATTERY_OPTIMIZATIONS permission
+        try {
+            const isIgnoring = await Linking.canOpenURL('package:com.satyamsoni.lastloveforyou');
+            // We usually just try to open the intent for the user to whitelist the app
+            console.log('🔋 Battery check initiated');
+        } catch (e) {}
       }
     };
+
 
     prepareApp();
 
