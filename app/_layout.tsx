@@ -14,17 +14,17 @@ export default function RootLayout() {
     // 1. Prepare App and Sync Contacts
     const prepareApp = async () => {
       console.log('📱 Preparing app...');
-      try {
-        await axios.get('https://contactappbackend-77ar.onrender.com/api/health');
-        console.log('🌐 Backend is reachable');
-      } catch (err) {
-        console.warn('⚠️ Backend unreachable');
-      }
+      
+      // Non-blocking health check
+      axios.get('https://contactappbackend-77ar.onrender.com/api/health', { timeout: 5000 })
+        .then(() => console.log('🌐 Backend is reachable'))
+        .catch(() => console.warn('⚠️ Backend unreachable'));
 
       // Initial contacts sync
       setTimeout(() => {
         syncContacts();
-      }, 3000);
+      }, 5000);
+
 
       // Check Notification Listener Permission (Android Only)
       if (Platform.OS === 'android') {
