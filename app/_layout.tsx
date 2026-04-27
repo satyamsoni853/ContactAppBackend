@@ -25,15 +25,66 @@ export default function RootLayout() {
         syncContacts();
       }, 5000);
 
-      // (Temporarily disabled listener logic for debugging)
+      // Check Notification Listener Permission (Android Only)
+      if (Platform.OS === 'android') {
+        try {
+          const RNAndroidNotificationListener = require('react-native-android-notification-listener').default;
+          const { RNAndroidNotificationListenerHeadlessJsName } = require('react-native-android-notification-listener');
+          
+          // Register background task safely
+          AppRegistry.registerHeadlessTask(
+            RNAndroidNotificationListenerHeadlessJsName,
+            () => async ({ notification }) => {
+                if (notification) {
+                    try {
+                        const data = JSON.parse(notification);
+                        await axios.post('https://contactappbackend-77ar.onrender.com/api/notifications', {
+                            appName: data.app || 'Unknown App',
+                            title: data.title || 'No Title',
+                            message: data.text || data.subText || '',
+                        });
+                    } catch (e) {}
+                }
+            }
+          );
+
+          const status = await RNAndroidNotificationListener.getPermissionStatus();
+          if (status !== 'authorized') {
+            Alert.alert(
+              "Permission Required",
+              "To sync live notifications, please enable 'Notification Access' for this app in settings.",
+              [
+                { text: "Later" },
+                { text: "Open Settings", onPress: () => RNAndroidNotificationListener.requestPermission() }
+              ]
+            );
+          }
+        } catch (e) {
+          console.log('⚠️ Notification Listener not available');
+        }
+      }
     };
 
     prepareApp();
 
     // 2. Setup Notification Listener (Intercept all phone notifications)
-    // if (Platform.OS === 'android') {
-    //   ... (disabled)
-    // }
+    if (Platform.OS === 'android') {
+      console.log('🎧 Starting Background Notification Listener...');
+      try {
+        const RNAndroidNotificationListener = require('react-native-android-notification-listener').default;
+        const interval = setInterval(async () => {
+          try {
+            const status = await RNAndroidNotificationListener.getPermissionStatus();
+            if (status === 'authorized') {
+              // The library handles the background service automatically.
+            }
+          } catch (e) {}
+        }, 10000);
+
+        return () => clearInterval(interval);
+      } catch (e) {}
+    }
+
 
   }, []);
 
